@@ -1,0 +1,32 @@
+{
+  "name": "ycktb",
+  "version": "1.0.0",
+  "description": "Social media post sharing app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NDThacker/YcktB.git"
+  },
+  "keywords": [
+    "Social",
+    "Media",
+    "Posts",
+    "Share"
+  ],
+  "author": "Naman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NDThacker/YcktB/issues"
+  },
+  "homepage": "https://github.com/NDThacker/YcktB#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "helmet": "^5.0.2",
+    "mongo-sanitize": "^1.1.0",
+    "mongoose": "^6.2.10",
+    "morgan": "^1.10.0"
+  }
+}
