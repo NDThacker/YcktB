@@ -1,0 +1,9 @@
+Each YouTube videos is tagged with keywords that describe a video
+
+script will make use of Regular Expressions that will match all the target tagnames that describe a video about new Movie of 'spiderman'
+
+for example these tagnames : 'spiderman', 'spiderman-movie', 'new-spiderman-movie', 'new-spiderman', 'spoiler-alert' etc.
+
+such tagnames can be searched in combination of RegEx to match all possible videos about new spiderman movie.
+
+Videos getting matched with these tagnames will be filtered out, to get a clean list of videos with no spoiler about new spiderman movie.

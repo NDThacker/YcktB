@@ -65,8 +65,8 @@ service.submitPost = (post, email) => {
 
 
 //Service to Add a Like to a post
-service.addLikeToPost = (email, pid) => {
-	return model.addUserToPostLikers(email, pid).then(status => {
+service.addLikeToPost = (email, name, pid) => {
+	return model.addUserToPostLikers(email, name, pid).then(status => {
 		if(status)
 		{
 			return model.addPostLiked(email, pid).then(pLikedData => {
@@ -88,8 +88,8 @@ service.addLikeToPost = (email, pid) => {
 
 
 //Service to add a like to a comment in a post
-service.addLikeToComment = (email, cid, pid) => {
-	return model.addUserToCommentLikers(userObj, cid, pid).then(status => {
+service.addLikeToComment = (email, name, cid, pid) => {
+	return model.addUserToCommentLikers(email, name, cid, pid).then(status => {
 		if(status)
 		{
 			return model.addCommentLiked(email, cid).then(cLikedData => {
@@ -169,6 +169,98 @@ service.addComment = (email, pid, content) => {
 		}
 		else {
 			let err = new error("Invalid Post");
+			err.status = 406;
+			throw err;
+		}
+	})
+}
+
+
+//Service to get lastet users liking latest post
+service.getLatestLikersOfPost = (email) => {
+	return model.getLatestPostId(email).then(pid => {
+		if(pid) {
+			return model.getLatestLikesOnPost(pid).then(latestUsers => {
+				if(latestUsers) return latestUsers;
+				else{
+					let err = new error("Invalid User");
+					err.status = 406;
+					throw err;
+				}
+			})
+		}
+		else 
+		{
+			let err = new error("Invalid user or User has no Posts yet");
+			err.status = 406;
+			throw err;
+		}
+	})
+}
+
+
+//Service to get latest likers of latest comment of user
+service.getLatestLikersOfLatestComment = (email) => {
+	return model.getLatestCommentIdAndPostId(email).then(cpObj => {
+		if(cpObj) {
+			return model.getLatestLikesOnComment(cpObj.cid, cpObj.pid).then(latestUsers => {
+				if(latestUsers != null) return latestUsers;
+				else {
+					let err = new error("User has no Comment yet");
+					err.status = 406;
+					throw err;
+				}
+			})
+		}
+		else {
+			let err = new error("Invalid user or User has no Comment yet");
+			err.status = 406;
+			throw err;
+		}
+	})
+}
+
+//Service to get latest likers of comment of any post
+service.getLatestLikersOfComment = (cid, pid) => {
+	return model.getLatestLikesOnComment(cid, pid).then(latestUsers => {
+		if(latestUsers != null) return latestUsers;
+		else {
+			let err = new error("User has no Comment yet");
+			err.status = 406;
+			throw err;
+		}
+	})
+}
+
+
+//Service to get latest comments on any post
+service.getLatestCommentsOfPost = (pid) => {
+	return model.getLatestCommentsOnPost(pid).then(latestUsers => {
+		if(latestUsers != null) return latestUsers;
+		else {
+			let err = new error("User has no post yet or no comments yet on given post");
+			err.status = 406;
+			throw err;
+		}
+	})
+}
+
+//Service to get latest comments on user latet post
+service.getLatestCommentsOfLatestPost = (email) => {
+	return model.getLatestPostId(email).then(pid => {
+		if(pid)
+		{
+			return model.getLatestCommentsOnPost(pid).then(latestUsers => {
+				if(latestUsers != null) return latestUsers;
+				else {
+					let err = new error("User has no post yet or no comments yet on given post");
+					err.status = 406;
+					throw err;
+				}
+			})	
+		}
+		else{
+			let err = new error("User has no post yet");
 			err.status = 406;
 			throw err;
 		}
