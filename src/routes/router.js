@@ -25,22 +25,22 @@ router.post('/submitpost', (req, res, next) => {
 })
 
 /*Put a like to a post
-req.body requires a user email who is performing the like operation
+req.body requires a user email and name of user who is performing the like operation
 req.body requires the pid of post
 error 406 on invalid inputs*/
 router.put('/addliketopost', (req, res, next) => {
-	service.addLikeToPost(req.body.email, req.body.pid).then(plikedData => {
+	service.addLikeToPost(req.body.email, req.body.name, req.body.pid).then(plikedData => {
 		res.json(plikedData);
 	}).catch(err => next(err))
 })
 
 
 /*Put a like to a comment of a post
-req.body requires the user email who is performing the like
+req.body requires the user email and name of user who is performing the like operation
 req.body requires postid and commentid
 error 406 on invalid inputs*/
 router.put('/addliketocomment', (req, res, next) => {
-	service.addLikeToComment(req.body.email, req.body.cid, req.body.pid).then(cLikedData => {
+	service.addLikeToComment(req.body.email,  req.body.name, req.body.cid, req.body.pid).then(cLikedData => {
 		res.json(cLikedData);
 	}).catch(err => next(err))
 })
@@ -89,11 +89,57 @@ router.post('/signup',(req, res, next) => {
 	require req body object with email and password
 	return user data if creds are valid, else 406 error */
 router.post('/login', (req, res, next) => {
-	console.log(req.body);
 	let creds = sanitize(req.body);
 	service.logInUser(creds).then(udata => {
 		res.json(udata);
 	}).catch(err => next(err));
+})
+
+/*Get latest 10 likers of the user latest post
+req.body requires the email of the user
+err 406 if invalid email or user has no posts*/
+router.post('/latestlikersofuserpost', (req, res, next) => {
+	service.getLatestLikersOfPost(req.body.email).then(latestLikers => {
+		res.json(latestLikers);
+	}).catch(err => next(err))
+})
+
+
+/*Get latest 10 likers of latest comment of user
+req.body requires email of user
+error 406 if invalid email or user has no comment*/
+router.post('/latestlikersofuserlatestcomment', (req, res, next) => {
+	service.getLatestLikersOfLatestComment(req.body.email).then(latestLikers => {
+		res.json(latestLikers);
+	}).catch(err => next(err))
+})
+
+/*Get latest 10 likers of any post of user
+req.body requries email of pid and cid*/
+router.post('/latestlikersofusercomment', (req, res, next) => {
+	service.getLatestLikersOfComment(req.body,cid, req.body.pid).then(latestLikers => {
+		res.json(latestLikers);
+	}).catch(err => next(err))
+})
+
+
+/*Get latest 10 commenters on any post of user
+req.body requires pid
+error 406 if invalid pid or no commments on the post yet
+*/
+router.post('/latestcommentersonpost', (req, res, next) => {
+	service.getLatestCommentsOfPost(req.body.pid).then(latestCommenters => {
+		res.json(latestCommenters);
+	}).catch(err => next(err))
+})
+
+/*Get latest 10 commenters on latest post of the user
+req.body requires email of user
+error 406 if user has not post or no comments yet on latest post*/
+router.post('/latestcommentersonlatestpost', (req, res, next) => {
+	service.getLatestCommentsOfLatestPost(req.body.email).then(latestCommenters => {
+		res.json(latestCommenters);
+	}).catch(err => next(err))
 })
 
 module.exports = router;

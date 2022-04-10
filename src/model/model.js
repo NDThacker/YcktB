@@ -2,6 +2,7 @@ const connection = require('../utilities/connection');
 const NewPost = require('./NewPost');
 const NewUser = require('./NewUser');
 const NewComment = require('./NewComment');
+const latestuserCount = -10;
 
 function generateNewId() {
 	let s = Math.random();
@@ -126,9 +127,9 @@ model.updateCommentLikedInUser = (commentLiked, email) => {
 }
 
 //Adding User to postLikers
-model.addUserToPostLikers = (email, pid) => {
+model.addUserToPostLikers = (email, name, pid) => {
 	return connection.getPostsCollection().then(db => {
-		return findByIdAndUpdate(pid, { $push: { postLikers: email}}, { select: postLikers}).then(pLikers => {
+		return db.findByIdAndUpdate(pid, { $push: { postLikers: {email: email, name: name}}}, { select: postLikers}).then(pLikers => {
 			if(pLikers) return true;
 			else return null;
 		})
@@ -137,14 +138,14 @@ model.addUserToPostLikers = (email, pid) => {
 
 
 //Adding an user's like to comment in post collection
-model.addUserToCommentLikers = (email, cid, pid) => {
+model.addUserToCommentLikers = (email, name, cid, pid) => {
 	return connection.getPostsCollection().then(db => {
 		return db.findById(pid).then(pdata => {
 			let comments = pdata["comments"];
 			let updatedComments = comments.map((cobj) => {
 				if(cobj[_id] == cid)
 				{
-					cobj["commentLikers"].push(email);
+					cobj["commentLikers"].push({email: email, name: name});
 					cobj["commentLikesCounter"]++;
 				}
 				return cobj;
@@ -166,7 +167,7 @@ model.removeUserFromCommentLikers = (email, cid, pid) => {
 				if(cobj[_id] == cid)
 				{
 					updatedCommentLikers = cobj["commentLikers"].filter(user => {
-						return user != email;
+						return user.email != email;
 					});
 					cobj["commentLikers"] = updatedCommentLikers;
 					cobj["commentLikersCounter"]--;
@@ -202,7 +203,7 @@ model.removeUserFromPostLikers = (email, pid) => {
 	return connection.getPostsCollection().then(db => {
 		return db.findById(pid).then(pdata => {
 			let pLiked = pdata[postLikers].filter(users => {
-				return users != email;
+				return users.email != email;
 			});
 			return db.findByIdAndUpdate(pid, { $set: { postLikers: pLiked, postLikedCounter: pdata.postLikedCounter - 1 }}, { select: postLikers}).then(postLikers => {
 				if(postLikers) return true;
@@ -242,6 +243,7 @@ model.addCommentToPost = (email, pid, content) => {
 	})
 }
 
+//Add a comment to User collection
 model.addCommentToUser = (email, pid, content) => {
 	return connection.getUserCollection().then(db => {
 		let newComment = new NewComment(email, content);
@@ -249,6 +251,81 @@ model.addCommentToUser = (email, pid, content) => {
 		newComment.postId = pid;
 		return db.findByIdAndUpdate(email, { $push: { commentCreated: newComment}}, { select: commentCreated}).then(commentCreated => {
 			if(commentCreated) return newComment;
+			else return null;
+		})
+	})
+}
+
+//Get latest pid for an User
+model.getLatestPostId = (email) => {
+	return connection.getUserCollection().then(db => {
+		return db.findById(email).then(uData => {
+			if(udata && uData["postCreated"].pop()) return uData["postCreated"].pop()["_id"];
+			else return null;
+		})
+	})
+}
+
+
+//Get latest cid and pid for an user
+model.getLatestCommentIdAndPostId = (email) => {
+	return connection.getUserCollection().then(db => {
+		return db.findById(email).then(uData => {
+			if(udata && uData["commentCreated"].pop()) {
+				let lastComment = uData["commentCreated"].pop();
+				return { cid: lastComment["_id"], pid: lastComment["pid"] }
+			}
+			else return null;
+		})
+	})
+}
+
+//Get latest likes on a pid
+model.getLatestLikesOnPost = (pid) => {
+	return connection.getPostsCollection().then(db => {
+		return db.findById(pid).then(pdata =>{
+			let latestUsers = pdata["postLikers"].slice(latestuserCount);
+			latestUsers.map(user => {
+				return user.name;
+			})
+			return latestUsers;
+		})
+	})
+}
+
+//Get latest likes on comment of a post
+model.getLatestLikesOnComment = (cid, pid) => {
+	return connection.getPostsCollection().then(db => {
+		return db.findById(pid).then(pdata => {
+			if(pdata) {
+				let reqComment = pdata.comments.filter(comm => {
+					return comm._id == cid;
+				})
+
+				if(reqComment == []) return null;
+				let latestUsers = reqComment[0].commentLikers.slice(latestuserCount);
+				latestUsers.map(user => {
+					return user.name;
+				})
+				return latestUsers;
+			}
+			else return null;
+		})
+	})
+}
+
+
+//Get latest comment on a post
+model.getLatestCommentsOnPost = (pid) => {
+	return connection.getPostsCollection().then(db => {
+		return db.findById(pid).then(pdata =>{
+			if(pdata) {
+				let latestUsers = pdata["comments"].slice(latestuserCount);
+				latestUsers.map(comment => {
+					return comment.author;
+				})
+				return latestUsers;
+			}
 			else return null;
 		})
 	})
